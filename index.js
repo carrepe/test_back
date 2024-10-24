@@ -5,7 +5,19 @@ const app = express();
 const port = process.env.PORT || 8000;
 
 const cors = require("cors");
-app.use(cors({ origin: process.env.CORS_ORIGIN, credentials: true }));
+// 환경변수가 제대로 적용되었는지 확인을 위해 수정
+app.use((req, res, next) => {
+	console.log("CORS_ORIGIN:", process.env.CORS_ORIGIN); // 로그 추가
+	next();
+});
+
+app.use(
+	cors({
+		origin: process.env.CORS_ORIGIN || "https://test-front-1wki.vercel.app",
+		credentials: true,
+	})
+);
+
 app.use(express.json());
 
 const mongoose = require("mongoose");

@@ -8,7 +8,7 @@ function handleFile(req) {
 	try {
 		if (req.file) {
 			// 파일 URL 경로로 변환
-			return `/uploads/${req.file.filename}`;
+			return `uploads/${req.file.filename}`;
 		}
 		return null;
 	} catch (error) {

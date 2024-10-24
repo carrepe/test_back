@@ -1,7 +1,9 @@
 {
 	"scripts": {
 		"start": "node index.js",
-		"dev": "nodemon index.js"
+		"dev": "nodemon index.js",
+		"build": "npm install",
+		"vercel-build": "echo hello"
 	},
 	"dependencies": {
 		"bcryptjs": "^2.4.3",

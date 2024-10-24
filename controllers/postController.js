@@ -5,30 +5,51 @@ const fs = require("fs");
 const path = require("path");
 
 function handleFile(req) {
-	if (req.file) {
-		const { filename, path: filePath } = req.file;
-		const newPath = filePath + path.extname(req.file.originalname);
-		fs.renameSync(filePath, newPath);
-		return newPath;
+	try {
+		if (req.file) {
+			// 파일 URL 경로로 변환
+			return `/uploads/${req.file.filename}`;
+		}
+		return null;
+	} catch (error) {
+		console.error("File handling error:", error);
+		throw error;
 	}
-	return null;
 }
 
 exports.createPost = async (req, res) => {
-	const newPath = handleFile(req);
-	const { token } = req.cookies;
-	jwt.verify(token, process.env.SECRET_KEY, {}, async (err, info) => {
-		if (err) throw err;
+	try {
+		const { token } = req.cookies;
+		if (!token) {
+			return res.status(401).json({ message: "인증이 필요합니다." });
+		}
+
+		const fileUrl = handleFile(req);
+
+		const info = await new Promise((resolve, reject) => {
+			jwt.verify(token, process.env.SECRET_KEY, {}, (err, decoded) => {
+				if (err) reject(err);
+				resolve(decoded);
+			});
+		});
+
 		const { title, summary, content } = req.body;
 		const postDoc = await Post.create({
 			title,
 			summary,
 			content,
-			cover: newPath,
+			cover: fileUrl,
 			author: info.username,
 		});
+
 		res.json(postDoc);
-	});
+	} catch (error) {
+		console.error("Create post error:", error);
+		res.status(500).json({
+			message: "글 등록에 실패했습니다.",
+			error: error.message,
+		});
+	}
 };
 
 exports.getPosts = async (req, res) => {
@@ -72,23 +93,45 @@ exports.getEditPage = async (req, res) => {
 };
 
 exports.editPost = async (req, res) => {
-	const newPath = handleFile(req);
-	const { token } = req.cookies;
-	if (!token) {
-		return res.status(401).json({ message: "인증 토큰이 없습니다." });
-	}
-	jwt.verify(token, process.env.SECRET_KEY, {}, async (err, info) => {
-		if (err) throw err;
+	try {
+		const fileUrl = handleFile(req);
+		const { token } = req.cookies;
+		if (!token) {
+			return res.status(401).json({ message: "인증 토큰이 없습니다." });
+		}
+
+		const info = await new Promise((resolve, reject) => {
+			jwt.verify(token, process.env.SECRET_KEY, {}, (err, decoded) => {
+				if (err) reject(err);
+				resolve(decoded);
+			});
+		});
+
 		const { title, summary, content } = req.body;
 		const postDoc = await Post.findById(req.params.id);
-		await Post.findByIdAndUpdate(req.params.id, {
-			title,
-			summary,
-			content,
-			cover: newPath ? newPath : postDoc.cover,
-		});
-		res.json({ message: "ok" });
-	});
+
+		if (!postDoc) {
+			return res
+				.status(404)
+				.json({ message: "게시글을 찾을 수 없습니다." });
+		}
+
+		const updatedPost = await Post.findByIdAndUpdate(
+			req.params.id,
+			{
+				title,
+				summary,
+				content,
+				cover: fileUrl ? fileUrl : postDoc.cover,
+			},
+			{ new: true }
+		);
+
+		res.json(updatedPost);
+	} catch (error) {
+		console.error("Edit post error:", error);
+		res.status(500).json({ message: "게시글 수정에 실패했습니다." });
+	}
 };
 
 exports.toggleLike = async (req, res) => {

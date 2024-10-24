@@ -23,3 +23,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# "copy"가 포함된 모든 파일 제외
+*copy*
+
+# 특정 확장자에서만 "copy"가 포함된 파일 제외
+*copy*.js
+*copy*.jsx
+*copy*.html
+
+# "copy"로 끝나는 파일 제외
+*copy
+
+# "copy"로 시작하는 파일 제외
+copy*
+
+# 특정 폴더 내의 "copy" 파일 제외
+folder/*copy*

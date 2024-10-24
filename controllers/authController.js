@@ -18,6 +18,14 @@ exports.register = async (req, res) => {
 	}
 };
 
+// 공통 쿠키 옵션
+const cookieOptions = {
+	httpOnly: true,
+	secure: process.env.NODE_ENV === "production",
+	sameSite: "none",
+	path: "/",
+};
+
 exports.login = async (req, res) => {
 	const { username, password } = req.body;
 	const userDoc = await User.findOne({ username });
@@ -32,12 +40,8 @@ exports.login = async (req, res) => {
 			{},
 			(err, token) => {
 				if (err) throw err;
-				// 쿠키 옵션 추가
 				res.cookie("token", token, {
-					httpOnly: true,
-					secure: process.env.NODE_ENV === "production", // HTTPS에서만 작동
-					sameSite: "none", // cross-site 쿠키 허용
-					path: "/",
+					...cookieOptions,
 					maxAge: 24 * 60 * 60 * 1000, // 24시간
 				}).json({
 					id: userDoc._id,
@@ -48,6 +52,12 @@ exports.login = async (req, res) => {
 	} else {
 		res.status(401).json({ message: "비밀번호가 틀렸습니다" });
 	}
+};
+
+exports.logout = (req, res) => {
+	res.clearCookie("token", cookieOptions).json({
+		message: "로그아웃 되었습니다",
+	});
 };
 
 exports.getProfile = async (req, res) => {
@@ -61,8 +71,4 @@ exports.getProfile = async (req, res) => {
 	} catch (err) {
 		return res.status(401).json("인증필요");
 	}
-};
-
-exports.logout = (req, res) => {
-	res.cookie("token", "").json("로그아웃 되었습니다");
 };

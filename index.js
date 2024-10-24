@@ -58,10 +58,10 @@ const postRoutes = require("./routes/postRoutes");
 const commentRoutes = require("./routes/commentRoutes");
 const userRoutes = require("./routes/userRoutes");
 
-app.use("/auth", authRoutes);
-app.use("/posts", postRoutes);
-app.use("/comments", commentRoutes);
-app.use("/users", userRoutes);
+app.use("auth", authRoutes);
+app.use("posts", postRoutes);
+app.use("comments", commentRoutes);
+app.use("users", userRoutes);
 
 // 에러 핸들링 미들웨어
 app.use((err, req, res, next) => {

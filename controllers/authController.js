@@ -32,7 +32,14 @@ exports.login = async (req, res) => {
 			{},
 			(err, token) => {
 				if (err) throw err;
-				res.cookie("token", token).json({
+				// 쿠키 옵션 추가
+				res.cookie("token", token, {
+					httpOnly: true,
+					secure: process.env.NODE_ENV === "production", // HTTPS에서만 작동
+					sameSite: "none", // cross-site 쿠키 허용
+					path: "/",
+					maxAge: 24 * 60 * 60 * 1000, // 24시간
+				}).json({
 					id: userDoc._id,
 					username,
 				});

@@ -22,7 +22,10 @@ exports.register = async (req, res) => {
 const cookieOptions = {
 	httpOnly: true,
 	secure: process.env.NODE_ENV === "production",
-	sameSite: "none",
+
+	// sameSite 쿠키의 보안 정책을 설정하는 속성
+	// 프론트엔드와 백엔드가 다른 도메인인 경우 (배포 환경)
+	sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 	path: "/",
 };
 

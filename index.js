@@ -12,6 +12,7 @@ const corsOptions = {
 		const allowedOrigins = [
 			process.env.CORS_ORIGIN,
 			"https://test-front-1wki.vercel.app",
+			"https://test-front-1wki-hpsbx8d3o-somypages-projects-9a741add.vercel.app",
 			"http://localhost:5173",
 		].filter(Boolean);
 
@@ -24,7 +25,7 @@ const corsOptions = {
 	},
 	credentials: true,
 	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-	allowedHeaders: ["Content-Type", "Authorization"],
+	allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
 	exposedHeaders: ["set-cookie"],
 };
 
@@ -57,11 +58,17 @@ const authRoutes = require("./routes/authRoutes");
 const postRoutes = require("./routes/postRoutes");
 const commentRoutes = require("./routes/commentRoutes");
 const userRoutes = require("./routes/userRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
+// 라우터
+// app.use("/auth", authRoutes);
+// '/'로 시작하면 https://test-back-1wki.vercel.app//auth 이런식으로 되어버림
 app.use("/auth", authRoutes);
 app.use("/posts", postRoutes);
 app.use("/comments", commentRoutes);
 app.use("/users", userRoutes);
+// 알림기능 라우터
+app.use("/notifications", notificationRoutes);
 
 // 에러 핸들링 미들웨어
 app.use((err, req, res, next) => {

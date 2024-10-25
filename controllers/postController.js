@@ -1,8 +1,7 @@
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const jwt = require("jsonwebtoken");
-const fs = require("fs");
-const path = require("path");
+const Notification = require("../models/Notification");
 
 function handleFile(req) {
 	try {
@@ -134,6 +133,7 @@ exports.editPost = async (req, res) => {
 	}
 };
 
+// 알림기능을 위한 코드 수정
 exports.toggleLike = async (req, res) => {
 	const { postId } = req.params;
 	const { token } = req.cookies;
@@ -159,6 +159,16 @@ exports.toggleLike = async (req, res) => {
 			post.likes.splice(likeIndex, 1);
 		} else {
 			post.likes.push(userIdStr);
+
+			// 좋아요 추가 시에만 알림 생성
+			if (post.author !== userInfo.username) {
+				await Notification.create({
+					recipient: post.author,
+					sender: userInfo.username,
+					postId,
+					type: "like",
+				});
+			}
 		}
 
 		await post.save();

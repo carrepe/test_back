@@ -1,4 +1,7 @@
 const Comment = require("../models/Comment");
+// 알림 설정을 위한 추가 코드
+const Notification = require("../models/Notification");
+const Post = require("../models/Post");
 
 exports.createComment = async (req, res) => {
 	const { postId, content, author } = req.body;
@@ -8,6 +11,19 @@ exports.createComment = async (req, res) => {
 			author,
 			post: postId,
 		});
+
+		// 게시글 작성자 찾기
+		const post = await Post.findById(postId);
+		if (post && post.author !== author) {
+			// 본인의 게시글이 아닐 경우에만 알림 생성
+			await Notification.create({
+				recipient: post.author,
+				sender: author,
+				postId,
+				type: "comment",
+			});
+		}
+
 		res.json(comment);
 	} catch (error) {
 		console.error("Error creating comment:", error);

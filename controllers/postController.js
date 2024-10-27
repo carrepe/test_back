@@ -11,7 +11,7 @@ function handleFile(req) {
 		}
 		return null;
 	} catch (error) {
-		console.error("File handling error:", error);
+		console.error("파일저장에러:", error);
 		throw error;
 	}
 }
@@ -43,7 +43,7 @@ exports.createPost = async (req, res) => {
 
 		res.json(postDoc);
 	} catch (error) {
-		console.error("Create post error:", error);
+		console.error("새글 작성 에러:", error);
 		res.status(500).json({
 			message: "글 등록에 실패했습니다.",
 			error: error.message,
@@ -128,7 +128,7 @@ exports.editPost = async (req, res) => {
 
 		res.json(updatedPost);
 	} catch (error) {
-		console.error("Edit post error:", error);
+		console.error("글수정 에러:", error);
 		res.status(500).json({ message: "게시글 수정에 실패했습니다." });
 	}
 };
@@ -201,7 +201,7 @@ exports.getUserPosts = async (req, res) => {
 
 		res.json(postsWithDetails);
 	} catch (error) {
-		console.error("Error fetching user posts:", error);
+		console.error("글 작성자 정보 가져오기 에러:", error);
 		res.status(500).json({ message: "서버 에러" });
 	}
 };

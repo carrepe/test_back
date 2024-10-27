@@ -50,7 +50,7 @@ exports.updateUserInfo = async (req, res) => {
 
 		res.json({ message: "사용자 정보가 정상적으로 수정되었습니다" });
 	} catch (error) {
-		console.error("Error updating user info:", error);
+		console.error("사용자정보 수정 에러:", error);
 		res.status(500).json({ message: "서버에러" });
 	}
 };

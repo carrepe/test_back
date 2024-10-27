@@ -1,5 +1,4 @@
 const Comment = require("../models/Comment");
-// 알림 설정을 위한 추가 코드
 const Notification = require("../models/Notification");
 const Post = require("../models/Post");
 
@@ -9,7 +8,7 @@ exports.createComment = async (req, res) => {
 		const comment = await Comment.create({
 			content,
 			author,
-			post: postId,
+			post: postId, // 모델의 post 필드와 매칭
 		});
 
 		// 게시글 작성자 찾기
@@ -60,7 +59,7 @@ exports.updateComment = async (req, res) => {
 		}
 		res.json(comment);
 	} catch (error) {
-		console.error("Error updating comment:", error);
+		console.error("댓글 에러:", error);
 		res.status(500).json({ message: "서버 에러" });
 	}
 };

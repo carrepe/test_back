@@ -53,20 +53,54 @@ exports.createPost = async (req, res) => {
 
 exports.getPosts = async (req, res) => {
 	try {
-		const posts = await Post.find().sort({ createdAt: -1 }).limit(20);
+		const page = parseInt(req.query.page) || 0;
+		const limit = parseInt(req.query.limit) || 10;
+		const skip = page * limit;
+
+		// 전체 게시물 수 조회
+		const totalPosts = await Post.countDocuments();
+
+		const posts = await Post.find()
+			.sort({ createdAt: -1 })
+			.skip(skip)
+			.limit(limit)
+			.lean();
+
+		// 각 게시물에 대한 추가 정보 조회
 		const postsWithDetails = await Promise.all(
 			posts.map(async (post) => {
 				const commentCount = await Comment.countDocuments({
 					post: post._id,
 				});
 				return {
-					...post.toObject(),
+					...post,
 					commentCount,
-					likeCount: post.likes.length,
+					likeCount: post.likes?.length || 0,
 				};
 			})
 		);
-		res.json(postsWithDetails);
+
+		// 실제로 더 불러올 데이터가 있는지 확인
+		const remainingPosts = totalPosts - (skip + posts.length);
+		const hasMore = remainingPosts > 0;
+
+		console.log({
+			page,
+			limit,
+			skip,
+			totalPosts,
+			loadedPosts: posts.length,
+			remainingPosts,
+			hasMore,
+		});
+
+		res.json({
+			posts: postsWithDetails,
+			page,
+			hasMore,
+			total: totalPosts,
+			remaining: remainingPosts,
+		});
 	} catch (error) {
 		console.error("Error fetching posts:", error);
 		res.status(500).json({ message: "서버 에러" });

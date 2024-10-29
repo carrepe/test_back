@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const axios = require("axios");
 
 exports.register = async (req, res) => {
 	const { username, password } = req.body;
@@ -73,5 +74,89 @@ exports.getProfile = async (req, res) => {
 		});
 	} catch (err) {
 		return res.status(401).json("인증필요");
+	}
+};
+
+exports.kakaoLogin = async (req, res) => {
+	try {
+		const { access_token } = req.body;
+		console.log("Received access token:", access_token);
+
+		if (!access_token) {
+			return res.status(400).json({
+				success: false,
+				message: "액세스 토큰이 필요합니다.",
+			});
+		}
+
+		// 카카오 사용자 정보 가져오기
+		const kakaoUserResponse = await axios.get(
+			"https://kapi.kakao.com/v2/user/me",
+			{
+				headers: {
+					Authorization: `Bearer ${access_token}`,
+				},
+			}
+		);
+
+		console.log("Kakao user data:", kakaoUserResponse.data);
+
+		const kakaoUser = kakaoUserResponse.data;
+		const kakaoId = kakaoUser.id.toString();
+
+		// 기존 사용자 확인 또는 새 사용자 생성
+		let user = await User.findOne({ username: `kakao_${kakaoId}` });
+
+		if (!user) {
+			// 새 사용자 생성
+
+			user = new User({
+				username: `kakao_${kakaoId}`,
+				password: `kakao_${kakaoId}`,
+				userImage: kakaoUser.properties?.profile_image || "",
+			});
+			await user.save();
+			console.log("New user created:", user.username);
+		}
+
+		// JWT 토큰 생성
+		const token = jwt.sign(
+			{ username: user.username, id: user._id },
+			process.env.SECRET_KEY,
+			{ expiresIn: "24h" }
+		);
+
+		console.log("JWT token generated for user:", user.username);
+
+		// 쿠키에 토큰 설정
+		res.cookie("token", token, {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+			path: "/",
+			maxAge: 24 * 60 * 60 * 1000, // 24시간
+		});
+
+		return res.json({
+			success: true,
+			user: {
+				id: user._id,
+				username: user.username,
+				userImage: user.userImage,
+			},
+		});
+	} catch (error) {
+		console.error(
+			"Kakao login detailed error:",
+			error.response?.data || error.message
+		);
+		return res.status(500).json({
+			success: false,
+			message: "카카오 로그인 처리 중 오류가 발생했습니다.",
+			error:
+				process.env.NODE_ENV === "development"
+					? error.message
+					: undefined,
+		});
 	}
 };
